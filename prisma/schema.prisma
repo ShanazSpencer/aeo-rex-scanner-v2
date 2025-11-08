@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id               String         @id @default(cuid())
+  email            String         @unique
+  password         String
+  name             String?
+  plan             String         @default("free")
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime       @default(now())
+  scans            Scan[]
+  subscriptions    Subscription[]
+  voiceScans       VoiceScan[]     // ← ADD THIS LINE
+}
+
+model Scan {
+  id              String   @id @default(cuid())
+  url             String
+  score           Int
+  recommendations String   // Changed from Json to String (will store as JSON string)
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            String   @default("single")
+  createdAt       DateTime @default(now())
+}
+
+model CompetitorScan {
+  id              String   @id @default(cuid())
+  userId          String
+  userUrl         String
+  competitorUrls  String   // Changed from String[] to String (comma-separated)
+  results         String   // Changed from Json to String
+  createdAt       DateTime @default(now())
+}
+
+model CompetitorSalesTracking {
+  id                      String   @id @default(cuid())
+  userId                  String
+  competitorUrl           String
+  companyName             String
+  aiMentions              Int      @default(0)
+  recommendationFrequency Int      @default(0)
+  citationRate            Float    @default(0)
+  shoppingPresence        Int      @default(0)
+  brandTrustScore         Float    @default(0)
+  estimatedTraffic        Int      @default(0)
+  weeklySnapshot          String   // Changed from Json to String
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+}
+
+model VoiceScan {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  url             String
+  voiceScore      Int
+  recommendations String
+  createdAt       DateTime @default(now())
+}
+
+model Subscription {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId String   @unique
+  status           String
+  planId           String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Watchlist {
+  id              String   @id @default(cuid())
+  userId          String
+  competitorUrls  String   // Changed from String[] to String (comma-separated)
+  categories      String   // Changed from String[] to String (comma-separated)
+  createdAt       DateTime @default(now())
+}
